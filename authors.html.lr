@@ -1,8 +1,38 @@
 <!DOCTYPE html>
 <html>
-<title>Authors</title>
-<body>
-Here are the authors
-(=*authors*)
-</body>
+  <head>
+    <title>Authors</title>
+    <link href="/stylesheet/image.css" media="all" rel="stylesheet" type="text/css" />
+  </head>
+  <body>
+    Here are the authors
+    <table>
+      <thead></thead>
+      <tbody>
+        ((loop for author in *authors*
+        do (with-template
+        <tr>
+          <td>
+            <div align="right">
+              <figure>
+                <a class="" href="/authors/(=(cdr (assoc :id author)))">
+                  <img src="(=(cdr (assoc :image author)))"/>
+                </a>
+              </figure>
+            </div>
+          </td>
+          <td>
+            <h3><a href="/authors/(=(cdr (assoc :id author)))">
+                (=(cdr (assoc :name author)))</a></h3>
+            <blockquote>
+              <p>
+                (=(cdr (assoc :text (cdr (assoc :qquote author)))))
+              </p>
+            </blockquote>
+          </td>
+        </tr>
+        )))
+      </tbody>
+    </table>
+  </body>
 </html>

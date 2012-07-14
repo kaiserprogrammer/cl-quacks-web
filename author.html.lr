@@ -1,0 +1,54 @@
+<table>
+  <thead></thead>
+  <tbody>
+    <tr>
+      <td>
+    <a href="/image/(=(cdr (assoc :id *author*)))" class="">
+      <div class="">
+        <figure>
+          ((let ((item "blub")
+                 (image (cdr (assoc :image *author*))))
+            (if (not (equal "" image))
+              (with-template
+                <img src="(=image)" />)
+              (with-template
+                (=(inline-file-template (relative-file "quote.html.lr")))))))
+        </figure>
+      </div>
+    </a>
+    </td>
+      <td>
+      <div class="">
+        <h3>(=(cdr (assoc :name *author*)))</h3>
+      </div>
+      </td>
+    </tr>
+  </tbody>
+</table>
+<div class="quotes">
+  <table class="table table-striped">
+  <thead><tr><td></td></tr></thead>
+  <tbody>
+  ((loop for quote in (cdr (assoc :quotes *author*)) do
+  (with-template
+  <tr><td>
+
+    <p>(=(cdr (assoc :text quote)))</p>
+    (=(if *user-id*
+      "like and dislike"
+      (format nil "likes: ~a, dislikes: ~a"
+         (cdr (assoc :likes quote))
+         (cdr (assoc :dislikes quote)))))
+    <small>Created by <cite>(=(cdr (assoc :user-name quote)))</cite>
+      </small>
+
+  </td></tr>
+  )))
+</tbody>
+</table>
+</div>
+((if *user-id*
+  (with-template
+  <div class="add_quote">
+    <h2>Add Quote</h2>
+  </div>)))

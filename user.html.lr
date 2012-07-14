@@ -1,0 +1,32 @@
+<h1>(=(cdr (assoc :name *user*)))</h1>
+
+<h2>Quotes Added</h2>
+
+<div class="quotes">
+  <table class="table">
+  <thead><tr><td></td><td></td></tr></thead>
+  <tbody>
+  ((loop for quote in (cdr (assoc :quotes-added *user*)) do
+  (with-template
+  <tr>
+    <td>
+      <div align="right">
+      <a href="/author/(=(cdr (assoc :author-id quote)))" class="">
+        <img src="(=(cdr (assoc :author-image quote)))" />
+      </a>
+      </div>
+    </td>
+    <td>
+      <p>(=(cdr (assoc :text quote))) --
+      <small>
+        <a href="/author/(=(cdr (assoc :author-id quote)))">
+          (=(cdr (assoc :author-name quote)))
+        </a>
+      </small>
+      </p>
+    </td>
+  </tr>
+  )))
+</tbody>
+</table>
+</div>
