@@ -7,4 +7,9 @@
   :author "Jürgen Bickert <juergenbickert@gmail.com>"
   :maintainer "Jürgen Bickert <juergenbickert@gmail.com>"
   :description "A Webified version of the quacks system"
-  :depends-on (:stampede :lisperati :quacks :alexandria))
+  :depends-on (:stampede
+               :lisperati
+               :quacks
+               :alexandria
+               :cl-ppcre
+               :cl-fad))
