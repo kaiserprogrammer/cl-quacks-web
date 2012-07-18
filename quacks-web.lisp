@@ -1,11 +1,16 @@
 (defpackage :quacks-web
-  (:use :cl :quacks :stampede :lisperati :alexandria)
+  (:use :cl
+        :quacks
+        :stampede
+        :lisperati
+        :alexandria
+        :cl-ppcre)
   (:export
    :present-authors))
 (in-package :quacks-web)
 
 (defvar *server*
-  (stampede:create-server "127.0.0.1" 8080
+  (stampede:create-server "127.0.0.1" 8000
                           (lambda (stream)
                             (handle-request stream))
                           :worker-threads 1))
@@ -17,14 +22,81 @@
 
 (defvar *db* (make-instance 'memory-db))
 
-(defparameter *authors-template*
-  (compile-file-template (relative-file "authors.html.lr")))
-(defparameter *author-template*
-  (compile-file-template (relative-file "author.html.lr")))
-(defparameter *users-template*
-  (compile-file-template (relative-file "users.html.lr")))
-(defparameter *user-template*
-  (compile-file-template (relative-file "user.html.lr")))
+(defmacro defrenderer (dir)
+  (let ((files (mapcar #'princ-to-string (cl-fad:list-directory (eval dir)))))
+    (append (list'progn)
+            (loop for file in files
+               collect `(define-renderer ,file)))))
+
+(defmacro define-renderer (filename)
+  (let* ((file (eval filename))
+         (dirs (split "/" file))
+         (dir (elt dirs (- (length dirs) 2)))
+         (action (elt (split "\\." (elt dirs (1- (length dirs)))) 0))
+         (fname (intern (string-upcase (concatenate 'string
+                                                    "render-"
+                                                    dir
+                                                    "-"
+                                                    action)))))
+    `(let ((template (compile-file-template ,filename)))
+       (defun ,fname
+           ()
+         (render-template template)))))
+
+(defrenderer "authors")
+(defrenderer "users")
+
+(defun defroute (reg fun)
+  (let ((regex (regex-replace-all ":[^/]+" reg "([^/$]+)"))
+        (params (extract-params-from-regex reg)))
+    (push (cons regex (cons params fun)) *routes*)))
+
+(defun extract-params-from-regex (reg)
+  (let (params)
+    (do-register-groups (param) ("/:([^/$]+)" reg)
+      (push (make-keyword (string-upcase param)) params))
+    (nreverse params)))
+
+(defun call-route (req res)
+  (declare (optimize (debug 3)))
+  (let* ((url (cdr (assoc :url req))))
+    (loop for route in *routes*
+       when (scan (car route) url)
+       return (multiple-value-bind (match groups)
+                  (scan-to-strings (car route) url)
+                (declare (ignore match))
+                (when (not (emptyp groups))
+                  (loop for value across groups
+                     for key in (cadr route)
+                     do (push (cons key value) (cdr (assoc :params req)))))
+                (funcall (cddr route) req res)))))
+
+(defparameter *routes* nil)
+
+(defroute "^/authors$" (lambda (req res)
+                         (declare (ignorable res req))
+                         (let ((*authors* (get-authors *db*)))
+                           (render-authors-index))))
+(defroute "^/authors/:id$" (lambda (req res)
+                             (declare (ignorable res req))
+                             (let* ((id (parse-integer (parameter :id (cdr (assoc :params req)))))
+                                    (*author* (get-author id *db*)))
+                               (render-authors-show))))
+(defroute "^/users/:id$" (lambda (req res)
+                           (declare (ignorable res req))
+                           (let ((*user* (get-user (parse-integer (parameter :id (cdr (assoc :params req)))) *db*)))
+                             (render-users-show))))
+(defroute "^/stylesheet/image.css$" (lambda (req res)
+                                      (declare (ignorable res req))
+                                      (progn
+                                        (setf (cdr (assoc "Content-Type" res :test 'equal)) "text/css")
+                                        (inline-file-template (relative-file "public/stylesheet/image.css")))))
+
+(defroute "^/users$" (lambda (req res)
+                      (declare (ignorable res req))
+                      (let ((*users* (get-users *db*)))
+                        (render-users-index))))
+
 
 (defvar *authors* nil)
 (defvar *author* nil)
@@ -33,39 +105,23 @@
 (defvar *user-id* nil)
 
 (defun handle-request (stream)
+  (declare (optimize (debug 3)))
   (let ((req (http-protocol-reader stream)))
     (handler-case
         (let ((res (list (cons :version (cdr (assoc :version req)))
                          (cons :status 200)
-                         (cons "Content-Type" "text/html")))
-              (parameters (cdr (assoc :parameters req))))
+                         (cons "Content-Type" "text/html"))))
           (write-log req)
-          (http-protocol-writer
-           res
-           (switch ((cdr (assoc :url req)) :test 'equal)
-             ("/authors" (let ((*authors* (get-authors *db*)))
-                           (render-template *authors-template*)))
-             ("/author/:id" (let ((*author* (get-author (parameter :id parameters) *db*)))
-                              (render-template *author-template*)))
-             ("/users" (let ((*users* (get-users *db*)))
-                         (render-template *users-template*)))
-             ("/user/:id" (let ((*user* (get-user (parameter :id parameters) *db*)))
-                            (render-template *user-template*)))
-             ("/stylesheet/image.css" (progn
-                                        (setf (cdr (assoc "Content-Type" res :test 'equal)) "text/css")
-                                        (inline-file-template (relative-file "public/stylesheet/image.css"))))
-             (t (progn
-                  (setf (cdr (assoc :status res)) 404)
-                  "404 Not Found")))
-           stream))
+          (http-protocol-writer res
+                                (call-route req res)
+                                stream))
       (t (e)
-        (let* ((res (list (cons :version (cdr (assoc :version req)))
-                          (cons :status 200)
-                          (cons "Content-Type" "text/plain"))))
-          (http-protocol-writer
-           res
-           (format nil "~w~%~%~a" req e)
-           stream))))))
+        (let ((res (list (cons :version (cdr (assoc :version req)))
+                         (cons :status 200)
+                         (cons "Content-Type" "text/plain"))))
+          (http-protocol-writer res
+                                (format nil "~w~%~%~a" req e)
+                                stream))))))
 
 (defun write-log (args)
   (format *logger* "~w~%" args))

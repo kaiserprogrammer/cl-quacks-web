@@ -5,14 +5,14 @@
   <thead></thead>
   <tbody>
     <td>
-      <a href="/user/(=(cdr (assoc :id user)))">
+      <a href="/users/(=(cdr (assoc :id user)))">
         <figure>
           <img src="" alt="gravatar_img" />
         </figure>
       </a>
     </td>
     <td>
-    <h3><a href="/user/(=(cdr (assoc :id user)))">(=(cdr (assoc :name
+    <h3><a href="/users/(=(cdr (assoc :id user)))">(=(cdr (assoc :name
   user)))</a> -- (=(cdr (assoc :score user)))</h3>
   ((when (cdr (assoc :quote user))
     (with-template

@@ -3,16 +3,15 @@
   <tbody>
     <tr>
       <td>
-    <a href="/image/(=(cdr (assoc :id *author*)))" class="">
+    <a href="/images/(=(cdr (assoc :id *author*)))" class="">
       <div class="">
         <figure>
-          ((let ((item "blub")
-                 (image (cdr (assoc :image *author*))))
+          ((let ((image (cdr (assoc :image *author*))))
             (if (not (equal "" image))
               (with-template
                 <img src="(=image)" />)
               (with-template
-                (=(inline-file-template (relative-file "quote.html.lr")))))))
+                <a href="/images/(=(cdr (assoc :id *author*)))">Add Image</a>))))
         </figure>
       </div>
     </a>

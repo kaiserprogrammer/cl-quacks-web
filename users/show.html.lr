@@ -11,7 +11,7 @@
   <tr>
     <td>
       <div align="right">
-      <a href="/author/(=(cdr (assoc :author-id quote)))" class="">
+      <a href="/authors/(=(cdr (assoc :author-id quote)))" class="">
         <img src="(=(cdr (assoc :author-image quote)))" />
       </a>
       </div>
@@ -19,7 +19,7 @@
     <td>
       <p>(=(cdr (assoc :text quote))) --
       <small>
-        <a href="/author/(=(cdr (assoc :author-id quote)))">
+        <a href="/authors/(=(cdr (assoc :author-id quote)))">
           (=(cdr (assoc :author-name quote)))
         </a>
       </small>
