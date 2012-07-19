@@ -43,8 +43,10 @@
            ()
          (render-template template)))))
 
-(defrenderer "authors")
-(defrenderer "users")
+(defrenderer (relative-file "authors"))
+(defrenderer (relative-file "users"))
+
+(defparameter *routes* nil)
 
 (defun defroute (reg fun)
   (let ((regex (regex-replace-all ":[^/]+" reg "([^/$]+)"))
@@ -71,7 +73,6 @@
                      do (push (cons key value) (cdr (assoc :params req)))))
                 (funcall (cddr route) req res)))))
 
-(defparameter *routes* nil)
 
 (defroute "^/authors$" (lambda (req res)
                          (declare (ignorable res req))
