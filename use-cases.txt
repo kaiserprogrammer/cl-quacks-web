@@ -1,0 +1,2 @@
+reload compiled-templates on change
+Performance-improvement: Routing Engine (count component) -> trie
