@@ -10,15 +10,15 @@
 (in-package :quacks-web)
 
 (defvar *server*
-  (stampede:create-server "127.0.0.1" 8000
+  (stampede:create-server 8000
                           (lambda (stream)
                             (handle-request stream))
                           :worker-threads 1))
 
-(defvar *logger* (open (relative-file "log")
-                       :direction :output
-                       :if-exists :append
-                       :if-does-not-exist :create))
+;; (defvar *logger* (open (relative-file "log")
+;;                        :direction :output
+;;                        :if-exists :append
+;;                        :if-does-not-exist :create))
 
 (defvar *db* (make-instance 'memory-db))
 
@@ -60,13 +60,13 @@
     (nreverse params)))
 
 (defun call-route (req res)
-  (declare (optimize (debug 3)))
   (let* ((url (cdr (assoc :url req))))
     (loop for route in *routes*
        when (scan (car route) url)
        return (multiple-value-bind (match groups)
                   (scan-to-strings (car route) url)
-                (declare (ignore match))
+                (declare (ignore match)
+                         (type vector groups))
                 (when (not (emptyp groups))
                   (loop for value across groups
                      for key in (cadr route)
@@ -106,13 +106,12 @@
 (defvar *user-id* nil)
 
 (defun handle-request (stream)
-  (declare (optimize (debug 3)))
   (let ((req (http-protocol-reader stream)))
     (handler-case
         (let ((res (list (cons :version (cdr (assoc :version req)))
                          (cons :status 200)
                          (cons "Content-Type" "text/html"))))
-          (write-log req)
+          ;; (write-log req)
           (http-protocol-writer res
                                 (call-route req res)
                                 stream))
@@ -124,8 +123,8 @@
                                 (format nil "~w~%~%~a" req e)
                                 stream))))))
 
-(defun write-log (args)
-  (format *logger* "~w~%" args))
+;; (defun write-log (args)
+;;   (format *logger* "~w~%" args))
 
 (defun parameter (name parameters)
   (cdr (assoc name parameters)))
