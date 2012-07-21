@@ -34,5 +34,6 @@
         )))
       </tbody>
     </table>
+    <a href="/authors/new">Add Author</a>
   </body>
 </html>

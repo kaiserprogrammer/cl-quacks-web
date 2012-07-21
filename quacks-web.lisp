@@ -91,8 +91,10 @@
                                   (declare (ignorable req res))
                                   (render-authors-new)))
 (defroute "POST" "^/authors" (lambda (req res)
-                               (declare (ignorable req res))
-                               (add-author (cdr  (assoc "name" (cdr (assoc :params req)) :test #'string=)) *db*)))
+                               (declare (ignorable req res)
+                                        (optimize (debug 3)))
+                               (add-author (cdr  (assoc "name" (cdr (assoc :params req)) :test #'string=)) *db*)
+                               (redirect-to "/authors")))
 
 (defroute "GET" "^/users/:id$" (lambda (req res)
                                 (declare (ignorable res req))
@@ -109,6 +111,10 @@
                             (let ((*users* (get-users *db*)))
                               (render-users-index))))
 
+(defmacro redirect-to (url)
+  `(progn (setf (cdr (assoc :status res)) 302)
+          (nconc res (list (cons "Location" ,url)))
+          ""))
 
 (defvar *authors* nil)
 (defvar *author* nil)
