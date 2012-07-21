@@ -52,7 +52,8 @@
 (defun defroute (method reg fun)
   (let ((regex (regex-replace-all ":[^/]+" reg "([^/$]+)"))
         (params (extract-params-from-regex reg)))
-    (push (cons regex (cons params fun)) (cdr (assoc method *routes*)))))
+    (let ((item (cons regex (cons params fun))))
+      (push item (cdr (assoc method *routes* :test #'string=))))))
 
 (defun extract-params-from-regex (reg)
   (let (params)
