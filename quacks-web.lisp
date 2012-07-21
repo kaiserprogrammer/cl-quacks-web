@@ -22,11 +22,42 @@
 
 (defvar *db* (make-instance 'memory-db))
 
+(defvar *inner-template* nil)
+
 (defmacro defrenderer (dir)
   (let ((files (mapcar #'princ-to-string (cl-fad:list-directory (eval dir)))))
     (append (list'progn)
             (loop for file in files
                collect `(define-renderer ,file)))))
+
+(defmacro defrenderer-with-page (dir renderer)
+  (let ((files (mapcar #'princ-to-string (cl-fad:list-directory (eval dir)))))
+    (append (list'progn)
+            (loop for file in files
+               collect `(define-renderer-with-page ,file ,renderer)))))
+
+(defmacro define-renderer-with-page (filename renderer)
+  (let* ((file (eval filename))
+         (dirs (split "/" file))
+         (dir (elt dirs (- (length dirs) 2)))
+         (action (elt (split "\\." (elt dirs (1- (length dirs)))) 0))
+         (fname (intern (string-upcase (concatenate 'string
+                                                    "render-"
+                                                    dir
+                                                    "-"
+                                                    action)))))
+    `(let ((template (compile-file-template ,file)))
+       (defun ,fname
+           ()
+         (let ((*inner-template* template))
+           (funcall ,renderer))))))
+
+(define-renderer "/home/coder/code/cl-quacks-web/application.html.lr")
+
+(defrenderer-with-page (relative-file "authors") #'render-cl-quacks-web-application)
+(defrenderer-with-page (relative-file "users") #'render-cl-quacks-web-application)
+(defrenderer-with-page (relative-file "images") #'render-cl-quacks-web-application)
+
 
 (defmacro define-renderer (filename)
   (let* ((file (eval filename))
@@ -43,9 +74,9 @@
            ()
          (render-template template)))))
 
-(defrenderer (relative-file "authors"))
-(defrenderer (relative-file "users"))
-(defrenderer (relative-file "images"))
+;; (defrenderer (relative-file "authors"))
+;; (defrenderer (relative-file "users"))
+;; (defrenderer (relative-file "images"))
 
 (defparameter *routes* (list (list "GET")
                              (list "POST")
@@ -82,7 +113,8 @@
 
 (defroute "GET" "^/authors$" (lambda (req res)
                               (declare (ignorable res req))
-                              (let ((*authors* (get-authors *db*)))
+                              (let ((*authors* (get-authors *db*))
+                                    (*title* "Authors"))
                                 (render-authors-index))))
 (defroute "GET" "^/authors/:id$" (lambda (req res)
                                   (declare (ignorable res req))
@@ -136,6 +168,7 @@
 (defvar *user* nil)
 (defvar *user-id* nil)
 (defvar *author-id* nil)
+(defvar *title* nil)
 
 (defun handle-request (stream)
   (let ((req (http-protocol-reader stream)))

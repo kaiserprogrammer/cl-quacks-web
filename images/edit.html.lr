@@ -1,19 +1,9 @@
-<!DOCTYPE html>
-<html>
-  <head>
-    <title>Image</title>
-  </head>
-  <body>
-    <div id="container" class="container">
-      <form accept-charset="UTF-8" action="/images/(=*author-id*)"
-            method="post">
-        <div style="margin:0;padding:0;display:inline">
-          <input name="utf8" type="hidden" value="&#x2713;" />
-          <input name="_method" type="hidden" value="put" />
-        </div>
-        <input id="url" name="url" type="text" />
-        <input name="commit" type="submit" value="Add Image" />
-      </form>
-    </div>
-  </body>
-</html>
+<form accept-charset="UTF-8" action="/images/(=*author-id*)"
+      method="post">
+  <div style="margin:0;padding:0;display:inline">
+    <input name="utf8" type="hidden" value="&#x2713;" />
+    <input name="_method" type="hidden" value="put" />
+  </div>
+  <input id="url" name="url" type="text" />
+  <input name="commit" type="submit" value="Add Image" />
+</form>

@@ -1,0 +1,12 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>(=*title*)</title>
+    <link href="/stylesheet/image.css" media="all" rel="stylesheet" type="text/css" />
+  </head>
+  <body>
+    <div id="container">
+      (=(render-template *inner-template*))
+    </div>
+  </body>
+</html>
