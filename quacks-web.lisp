@@ -12,83 +12,30 @@
 (defvar *server*
   (stampede:create-http-server 8000 :worker-threads 20))
 
-;; (defvar *logger* (open (relative-file "log")
-;;                        :direction :output
-;;                        :if-exists :append
-;;                        :if-does-not-exist :create))
-
 (defvar *db* (make-instance 'memory-db))
-
-(defvar *inner-template* nil)
-
-(defmacro defrenderer (dir)
-  (let ((files (mapcar #'princ-to-string (cl-fad:list-directory (eval dir)))))
-    (append (list'progn)
-            (loop for file in files
-               collect `(define-renderer ,file)))))
-
-(defmacro defrenderer-with-page (dir renderer)
-  (let ((files (mapcar #'princ-to-string (cl-fad:list-directory (eval dir)))))
-    (append (list'progn)
-            (loop for file in files
-               collect `(define-renderer-with-page ,file ,renderer)))))
-
-(defmacro define-renderer-with-page (filename renderer)
-  (let* ((file (eval filename))
-         (dirs (split "/" file))
-         (dir (elt dirs (- (length dirs) 2)))
-         (action (elt (split "\\." (elt dirs (1- (length dirs)))) 0))
-         (fname (intern (string-upcase (concatenate 'string
-                                                    "render-"
-                                                    dir
-                                                    "-"
-                                                    action)))))
-    `(let ((template (compile-file-template ,file)))
-       (defun ,fname
-           ()
-         (let ((*inner-template* template))
-           (funcall ,renderer))))))
 
 (define-renderer "/home/coder/code/cl-quacks-web/application.html.lr")
 
-(defrenderer-with-page (relative-file "authors") #'render-cl-quacks-web-application)
-(defrenderer-with-page (relative-file "users") #'render-cl-quacks-web-application)
-(defrenderer-with-page (relative-file "images") #'render-cl-quacks-web-application)
-
-
-(defmacro define-renderer (filename)
-  (let* ((file (eval filename))
-         (dirs (split "/" file))
-         (dir (elt dirs (- (length dirs) 2)))
-         (action (elt (split "\\." (elt dirs (1- (length dirs)))) 0))
-         (fname (intern (string-upcase (concatenate 'string
-                                                    "render-"
-                                                    dir
-                                                    "-"
-                                                    action)))))
-    `(let ((template (compile-file-template ,filename)))
-       (defun ,fname
-           ()
-         (render-template template)))))
-
-;; (defrenderer (relative-file "authors"))
-;; (defrenderer (relative-file "users"))
-;; (defrenderer (relative-file "images"))
-
+(defrenderer-with-page "/home/coder/code/cl-quacks-web/authors" #'render-cl-quacks-web-application *inner-template*)
+(defrenderer-with-page (relative-file "users") #'render-cl-quacks-web-application *inner-template*)
+(defrenderer-with-page (relative-file "images") #'render-cl-quacks-web-application *inner-template*)
 
 (defroute *server* "GET" "^/authors$" (lambda (req res)
                               (declare (ignorable res req))
                               (let ((*authors* (get-authors *db*))
                                     (*title* "Authors"))
                                 (render-authors-index))))
+
 (defroute *server* "GET" "^/authors/:id$" (lambda (req res)
                                   (declare (ignorable res req))
-                                  (let* ((id (parse-integer (parameter :id (cdr (assoc :params req)))))
+                                  (let* ((id (get-id req))
                                          (*author* (get-author id *db*)))
                                     (render-authors-show))))
+
 (defroute *server* "GET" "^/authors/new" (lambda (req res)
                                   (declare (ignorable req res))
                                   (render-authors-new)))
+
 (defroute *server* "POST" "^/authors" (lambda (req res)
                                (declare (ignorable req res)
                                         (optimize (debug 3)))
@@ -97,9 +44,8 @@
 
 (defroute *server* "GET" "^/users/:id$" (lambda (req res)
                                 (declare (ignorable res req))
-                                (let ((*user* (get-user (parse-integer (parameter :id (cdr (assoc :params req)))) *db*)))
+                                (let ((*user* (get-user (get-id req) *db*)))
                                   (render-users-show))))
-
 
 (defroute *server* "GET" "^/public/quacks.css$" (lambda (req res)
                                          (declare (ignorable res req))
@@ -113,12 +59,12 @@
 
 (defroute *server* "GET" "^/images/:id$" (lambda (req res)
                                   (declare (ignorable res req))
-                                  (let ((*author-id* (parameter :id (cdr (assoc :params req)))))
+                                  (let ((*author-id* (get-id req)))
                                     (render-images-edit))))
 
 (defroute *server* "PUT" "^/images/:id$" (lambda (req res)
                                   (declare (ignorable res req))
-                                  (let ((author-id (parse-integer (parameter :id (cdr (assoc :params req)))))
+                                  (let ((author-id (get-id req))
                                         (url (cdr (assoc "url" (cdr (assoc :params req)) :test #'string=))))
                                     (when (and url (not (emptyp url)))
                                       (add-image author-id url *db*))
@@ -143,5 +89,5 @@
 (defvar *title* nil)
 
 
-(defun parameter (name parameters)
-  (cdr (assoc name parameters)))
+(defun get-id (req)
+  (parse-integer (cdr (assoc :id (cdr (assoc :params req))))))
