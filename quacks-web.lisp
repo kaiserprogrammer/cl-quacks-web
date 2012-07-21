@@ -134,11 +134,18 @@
                                 (declare (ignorable res req))
                                 (let ((*user* (get-user (parse-integer (parameter :id (cdr (assoc :params req)))) *db*)))
                                   (render-users-show))))
-(defroute "GET" "^/stylesheet/image.css$" (lambda (req res)
-                                           (declare (ignorable res req))
-                                           (progn
-                                             (setf (cdr (assoc "Content-Type" res :test 'equal)) "text/css")
-                                             (inline-file-template (relative-file "public/stylesheet/image.css")))))
+
+
+(defroute "GET" "^/public/quacks.css$" (lambda (req res)
+                                         (declare (ignorable res req))
+                                         (setf (cdr (assoc "Content-Type" res :test #'string=)) "text/css")
+                                         (alexandria:read-file-into-string (relative-file "public/quacks.css"))))
+
+(defroute "GET" "^/public/quacks.js$" (lambda (req res)
+                                       (declare (ignorable res req))
+                                       (setf (cdr (assoc "Content-Type" res :test #'string=)) "text/javascript")
+                                       (alexandria:read-file-into-string (relative-file "public/quacks.js"))))
+
 (defroute "GET" "^/images/:id$" (lambda (req res)
                                   (declare (ignorable res req))
                                   (let ((*author-id* (parameter :id (cdr (assoc :params req)))))

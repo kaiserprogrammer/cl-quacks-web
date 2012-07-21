@@ -26,4 +26,4 @@
     )))
   </tbody>
 </table>
-<a href="/authors/new">Add Author</a>
+<a href="/authors/new" class="btn">Add Author</a>
