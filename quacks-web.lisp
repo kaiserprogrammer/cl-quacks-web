@@ -13,7 +13,7 @@
   (stampede:create-server 8000
                           (lambda (stream)
                             (handle-request stream))
-                          :worker-threads 1))
+                          :worker-threads 20))
 
 ;; (defvar *logger* (open (relative-file "log")
 ;;                        :direction :output
@@ -45,9 +45,11 @@
 
 (defrenderer (relative-file "authors"))
 (defrenderer (relative-file "users"))
+(defrenderer (relative-file "images"))
 
 (defparameter *routes* (list (list "GET")
-                             (list "POST")))
+                             (list "POST")
+                             (list "PUT")))
 
 (defun defroute (method reg fun)
   (let ((regex (regex-replace-all ":[^/]+" reg "([^/$]+)"))
@@ -105,6 +107,18 @@
                                            (progn
                                              (setf (cdr (assoc "Content-Type" res :test 'equal)) "text/css")
                                              (inline-file-template (relative-file "public/stylesheet/image.css")))))
+(defroute "GET" "^/images/:id$" (lambda (req res)
+                                  (declare (ignorable res req))
+                                  (let ((*author-id* (parameter :id (cdr (assoc :params req)))))
+                                    (render-images-edit))))
+
+(defroute "PUT" "^/images/:id$" (lambda (req res)
+                                  (declare (ignorable res req))
+                                  (let ((author-id (parse-integer (parameter :id (cdr (assoc :params req)))))
+                                        (url (cdr (assoc "url" (cdr (assoc :params req)) :test #'string=))))
+                                    (when (and url (not (emptyp url)))
+                                      (add-image author-id url *db*))
+                                    (redirect-to (format nil "/authors/~a" author-id)))))
 
 (defroute "GET" "^/users$" (lambda (req res)
                             (declare (ignorable res req))
@@ -121,6 +135,7 @@
 (defvar *users* nil)
 (defvar *user* nil)
 (defvar *user-id* nil)
+(defvar *author-id* nil)
 
 (defun handle-request (stream)
   (let ((req (http-protocol-reader stream)))

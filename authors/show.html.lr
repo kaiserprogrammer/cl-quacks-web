@@ -46,6 +46,7 @@
 </tbody>
 </table>
 </div>
+<a href="/authors">Back</a>
 ((if *user-id*
   (with-template
   <div class="add_quote">
