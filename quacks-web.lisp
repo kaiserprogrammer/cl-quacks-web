@@ -4,7 +4,8 @@
         :stampede
         :lisperati
         :alexandria
-        :cl-ppcre)
+        :cl-ppcre
+        :silcro)
   (:export
    :present-authors))
 (in-package :quacks-web)
@@ -16,70 +17,6 @@
 
 (define-renderer "/home/coder/code/cl-quacks-web/application.html.lr")
 
-(defrenderer-with-page "/home/coder/code/cl-quacks-web/authors" #'render-cl-quacks-web-application *inner-template*)
-(defrenderer-with-page (relative-file "users") #'render-cl-quacks-web-application *inner-template*)
-(defrenderer-with-page (relative-file "images") #'render-cl-quacks-web-application *inner-template*)
-
-(defroute *server* "GET" "^/authors$" (lambda (req res)
-                              (declare (ignorable res req))
-                              (let ((*authors* (get-authors *db*))
-                                    (*title* "Authors"))
-                                (render-authors-index))))
-
-(defroute *server* "GET" "^/authors/:id$" (lambda (req res)
-                                  (declare (ignorable res req))
-                                  (let* ((id (get-id req))
-                                         (*author* (get-author id *db*)))
-                                    (render-authors-show))))
-
-(defroute *server* "GET" "^/authors/new" (lambda (req res)
-                                  (declare (ignorable req res))
-                                  (render-authors-new)))
-
-(defroute *server* "POST" "^/authors" (lambda (req res)
-                               (declare (ignorable req res)
-                                        (optimize (debug 3)))
-                               (add-author (cdr  (assoc "name" (cdr (assoc :params req)) :test #'string=)) *db*)
-                               (redirect-to "/authors")))
-
-(defroute *server* "GET" "^/users/:id$" (lambda (req res)
-                                (declare (ignorable res req))
-                                (let ((*user* (get-user (get-id req) *db*)))
-                                  (render-users-show))))
-
-(defroute *server* "GET" "^/public/quacks.css$" (lambda (req res)
-                                         (declare (ignorable res req))
-                                         (setf (cdr (assoc "Content-Type" res :test #'string=)) "text/css")
-                                         (alexandria:read-file-into-string (relative-file "public/quacks.css"))))
-
-(defroute *server* "GET" "^/public/quacks.js$" (lambda (req res)
-                                       (declare (ignorable res req))
-                                       (setf (cdr (assoc "Content-Type" res :test #'string=)) "text/javascript")
-                                       (alexandria:read-file-into-string (relative-file "public/quacks.js"))))
-
-(defroute *server* "GET" "^/images/:id$" (lambda (req res)
-                                  (declare (ignorable res req))
-                                  (let ((*author-id* (get-id req)))
-                                    (render-images-edit))))
-
-(defroute *server* "PUT" "^/images/:id$" (lambda (req res)
-                                  (declare (ignorable res req))
-                                  (let ((author-id (get-id req))
-                                        (url (cdr (assoc "url" (cdr (assoc :params req)) :test #'string=))))
-                                    (when (and url (not (emptyp url)))
-                                      (add-image author-id url *db*))
-                                    (redirect-to (format nil "/authors/~a" author-id)))))
-
-(defroute *server* "GET" "^/users$" (lambda (req res)
-                            (declare (ignorable res req))
-                            (let ((*users* (get-users *db*)))
-                              (render-users-index))))
-
-(defmacro redirect-to (url)
-  `(progn (setf (cdr (assoc :status res)) 302)
-          (nconc res (list (cons "Location" ,url)))
-          ""))
-
 (defvar *authors* nil)
 (defvar *author* nil)
 (defvar *users* nil)
@@ -88,6 +25,46 @@
 (defvar *author-id* nil)
 (defvar *title* nil)
 
+(defrenderer-with-page "/home/coder/code/cl-quacks-web/authors" #'render-cl-quacks-web-application *inner-template*)
+(defrenderer-with-page (relative-file "users") #'render-cl-quacks-web-application *inner-template*)
+(defrenderer-with-page (relative-file "images") #'render-cl-quacks-web-application *inner-template*)
 
-(defun get-id (req)
-  (parse-integer (cdr (assoc :id (cdr (assoc :params req))))))
+(s-get (*server* "/authors")
+       (let ((*authors* (get-authors *db*))
+             (*title* "Authors"))
+         (render-authors-index)))
+
+(s-get (*server* "/authors/:id")
+       (let* ((id (get-id))
+              (*author* (get-author id *db*)))
+         (render-authors-show)))
+
+(s-get (*server* "/authors/new")
+       (render-authors-new))
+
+(s-post (*server* "/authors")
+        (add-author (param "name") *db*)
+        (redirect-to "/authors"))
+
+(s-get (*server* "/users/:id")
+       (let ((*user* (get-user (get-id) *db*)))
+         (render-users-show)))
+
+(s-file *server* "/public/quacks.css")
+(s-file *server* "/public/quacks.js")
+
+(s-get (*server* "/images/:id")
+       (let ((*author-id* (get-id)))
+         (render-images-edit)))
+
+(s-put (*server* "/images/:id")
+       (let ((author-id (get-id))
+             (url (param "url")))
+         (when (and url (not (emptyp url)))
+           (add-image author-id url *db*))
+         (redirect-to (format nil "/authors/~a" author-id))))
+
+(s-get (*server* "/users")
+       (let ((*users* (get-users *db*)))
+         (render-users-index)))
+
