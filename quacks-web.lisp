@@ -50,8 +50,8 @@
        (let ((*user* (get-user (get-id) *db*)))
          (render-users-show)))
 
-(s-file *server* "/public/quacks.css")
-(s-file *server* "/public/quacks.js")
+(s-file *server* "/home/coder/code/cl-quacks-web/public/quacks.css" "/public/quacks.css")
+(s-file *server* "/home/coder/code/cl-quacks-web/public/quacks.js" "/public/quacks.js")
 
 (s-get (*server* "/images/:id")
        (let ((*author-id* (get-id)))
