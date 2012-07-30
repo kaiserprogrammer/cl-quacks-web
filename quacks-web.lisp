@@ -15,8 +15,6 @@
 
 (defvar *db* (make-instance 'memory-db))
 
-(define-renderer "/home/coder/code/cl-quacks-web/application.html.lr")
-
 (defvar *authors* nil)
 (defvar *author* nil)
 (defvar *users* nil)
@@ -26,9 +24,7 @@
 (defvar *title* nil)
 (defvar *inner-template* nil)
 
-(defrenderer-with-page "/home/coder/code/cl-quacks-web/authors" #'render-cl-quacks-web-application *inner-template*)
-(defrenderer-with-page (relative-file "users") #'render-cl-quacks-web-application *inner-template*)
-(defrenderer-with-page (relative-file "images") #'render-cl-quacks-web-application *inner-template*)
+(defrenderer-with-inner-template "~/code/cl-quacks-web/application.html.lr" "~/code/cl-quacks-web/" :match "\\.lr$")
 
 (s-get (*server* "/authors")
        (let ((*authors* (get-authors *db*))
@@ -51,8 +47,7 @@
        (let ((*user* (get-user (get-id) *db*)))
          (render-users-show)))
 
-(s-file *server* "/home/coder/code/cl-quacks-web/public/quacks.css" "/public/quacks.css")
-(s-file *server* "/home/coder/code/cl-quacks-web/public/quacks.js" "/public/quacks.js")
+(s-dir *server* "public")
 
 (s-get (*server* "/images/:id")
        (let ((*author-id* (get-id)))

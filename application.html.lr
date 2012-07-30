@@ -29,7 +29,7 @@
       </div>
     </div>
     <div id="container" class="container">
-      (=(render-template *inner-template*))
+      (=(render-template lisperati::*inner-template*))
     </div>
   </body>
 </html>
