@@ -24,6 +24,7 @@
 (defvar *user-id* nil)
 (defvar *author-id* nil)
 (defvar *title* nil)
+(defvar *inner-template* nil)
 
 (defrenderer-with-page "/home/coder/code/cl-quacks-web/authors" #'render-cl-quacks-web-application *inner-template*)
 (defrenderer-with-page (relative-file "users") #'render-cl-quacks-web-application *inner-template*)
