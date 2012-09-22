@@ -10,6 +10,7 @@
   :depends-on (:stampede
                :lisperati
                :quacks
+               :silcro
                :alexandria
                :cl-ppcre
                :cl-fad))

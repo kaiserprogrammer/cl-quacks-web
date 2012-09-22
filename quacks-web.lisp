@@ -27,9 +27,12 @@
 (defrenderer-with-inner-template "~/code/cl-quacks-web/application.html.lr" "~/code/cl-quacks-web/" :match "\\.lr$")
 
 (s-get (*server* "/authors")
+       (set-session "johnny" "you're awesome")
        (let ((*authors* (get-authors *db*))
              (*title* "Authors"))
-         (render-authors-index)))
+         (write-headers)
+         (write-to-stream (render-authors-index))
+         (response-written)))
 
 (s-get (*server* "/authors/:id")
        (let* ((id (get-id))
@@ -37,7 +40,9 @@
          (render-authors-show)))
 
 (s-get (*server* "/authors/new")
-       (render-authors-new))
+       (let ((cookie (get-session "john")))
+         (let ((*title* cookie))
+           (render-authors-new))))
 
 (s-post (*server* "/authors")
         (add-author (param "name") *db*)
@@ -46,8 +51,11 @@
 (s-get (*server* "/users/:id")
        (let ((*user* (get-user (get-id) *db*)))
          (render-users-show)))
+(s-get (*server* "/login")
+       (set-cookie "blub" "secrect_session")
+       "fine")
 
-(s-dir *server* "public")
+(s-dir *server* #.(relative-file "public"))
 
 (s-get (*server* "/images/:id")
        (let ((*author-id* (get-id)))
@@ -64,3 +72,4 @@
        (let ((*users* (get-users *db*)))
          (render-users-index)))
 
+(s-file *server* "~/crealytics-broschuere.pdf" "/public/crealytics")
