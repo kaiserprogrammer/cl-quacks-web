@@ -30,8 +30,8 @@
        (set-session "johnny" "you're awesome")
        (let ((*authors* (get-authors *db*))
              (*title* "Authors"))
-         (write-headers)
-         (write-to-stream (render-authors-index))
+         (flush-headers)
+         (write-to-client (render-authors-index))
          (response-written)))
 
 (s-get (*server* "/authors/:id")
@@ -40,7 +40,7 @@
          (render-authors-show)))
 
 (s-get (*server* "/authors/new")
-       (let ((cookie (get-session "john")))
+       (let ((cookie (get-session "johnny")))
          (let ((*title* cookie))
            (render-authors-new))))
 
