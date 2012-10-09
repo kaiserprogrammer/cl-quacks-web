@@ -1,3 +1,10 @@
+(ql:quickload :quacks)
+(ql:quickload :stampede)
+(ql:quickload :lisperati)
+(ql:quickload :alexandria)
+(ql:quickload :cl-ppcre)
+(ql:quickload :silcro)
+
 (defpackage :quacks-web
   (:use :cl
         :quacks
@@ -24,7 +31,7 @@
 (defvar *title* nil)
 (defvar *inner-template* nil)
 
-(defrenderer-with-inner-template "~/code/cl-quacks-web/application.html.lr" "~/code/cl-quacks-web/" :match "\\.lr$")
+(defrenderer-with-inner-template #.(relative-file "application.html.lr") #.(relative-file ".") :match "\\.lr$")
 
 (s-get (*server* "/authors")
        (set-session "johnny" "you're awesome")
@@ -72,4 +79,4 @@
        (let ((*users* (get-users *db*)))
          (render-users-index)))
 
-(s-file *server* "~/crealytics-broschuere.pdf" "/public/crealytics")
+;; (s-file *server* "~/broschuere.pdf" "/public/broschuere.pdf")
