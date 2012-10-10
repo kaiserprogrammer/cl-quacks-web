@@ -12,9 +12,7 @@
         :lisperati
         :alexandria
         :cl-ppcre
-        :silcro)
-  (:export
-   :present-authors))
+        :silcro))
 (in-package :quacks-web)
 
 (defvar *server*
